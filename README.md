@@ -1,6 +1,10 @@
 # PyGame
 PyGame Repository
 
+## Lectures
+  1. Install PyGame
+  2. Create PyGame Window
+
 ## Tetris
 - A classic puzzle game
 
