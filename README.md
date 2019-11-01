@@ -5,12 +5,9 @@ PyGame Repository
   1. Install PyGame
   2. Create PyGame Window
 
-## Tetris
-- A classic puzzle game
+## Coded by
+- LuHa
 
-## Mine swipper
-- A puzzle game based on rule about number
-
-## Belt scrool
-- Shooting
+### References
+- Book
 
