@@ -17,14 +17,23 @@ SURFACE = pygame.display.set_mode((400, 300)) # PyGame Window Size (x, y)
 
 
 def main():
+    sysfont = pygame.font.SysFont(None, 36) # Load system font
+    counter = 0
+
     while True:
-        SURFACE.fill(BLACK) # White
+        SURFACE.fill(WHITE)
 
         for event in pygame.event.get(): # Get events
             if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
-            
+
+        counter = counter + 1
+        count_text = sysfont.render(f'count is {counter}', 
+                                    True,
+                                    GREY)
+        SURFACE.blit(count_text, (50, 50))
+
         pygame.display.update()
 
 
