@@ -1,112 +1,116 @@
-﻿""" tetris.py - Copyright 2016 Kenichiro Tanaka """
-import sys
+﻿import sys
 from math import sqrt
-from random import randint
-import pygame
-from pygame.locals import QUIT, KEYDOWN, \
-    K_LEFT, K_RIGHT, K_DOWN, K_SPACE
+import random
 
-BLOCK_DATA = (
-    (
-        (0, 0, 1, \
-         1, 1, 1, \
-         0, 0, 0),
-        (0, 1, 0, \
-         0, 1, 0, \
-         0, 1, 1),
-        (0, 0, 0, \
-         1, 1, 1, \
-         1, 0, 0),
-        (1, 1, 0, \
-         0, 1, 0, \
-         0, 1, 0),
-    ), (
-        (2, 0, 0, \
-         2, 2, 2, \
-         0, 0, 0),
-        (0, 2, 2, \
-         0, 2, 0, \
-         0, 2, 0),
-        (0, 0, 0, \
-         2, 2, 2, \
-         0, 0, 2),
-        (0, 2, 0, \
-         0, 2, 0, \
-         2, 2, 0)
-    ), (
-        (0, 3, 0, \
-         3, 3, 3, \
-         0, 0, 0),
-        (0, 3, 0, \
-         0, 3, 3, \
-         0, 3, 0),
-        (0, 0, 0, \
-         3, 3, 3, \
-         0, 3, 0),
-        (0, 3, 0, \
-         3, 3, 0, \
-         0, 3, 0)
-    ), (
-        (4, 4, 0, \
-         0, 4, 4, \
-         0, 0, 0),
-        (0, 0, 4, \
-         0, 4, 4, \
-         0, 4, 0),
-        (0, 0, 0, \
-         4, 4, 0, \
-         0, 4, 4),
-        (0, 4, 0, \
-         4, 4, 0, \
-         4, 0, 0)
-    ), (
-        (0, 5, 5, \
-         5, 5, 0, \
-         0, 0, 0),
-        (0, 5, 0, \
-         0, 5, 5, \
-         0, 0, 5),
-        (0, 0, 0, \
-         0, 5, 5, \
-         5, 5, 0),
-        (5, 0, 0, \
-         5, 5, 0, \
-         0, 5, 0)
-    ), (
-        (6, 6, 6, 6),
-        (6, 6, 6, 6),
-        (6, 6, 6, 6),
-        (6, 6, 6, 6)
-    ), (
-        (0, 7, 0, 0, \
-         0, 7, 0, 0, \
-         0, 7, 0, 0, \
-         0, 7, 0, 0),
-        (0, 0, 0, 0, \
-         7, 7, 7, 7, \
-         0, 0, 0, 0, \
-         0, 0, 0, 0),
-        (0, 0, 7, 0, \
-         0, 0, 7, 0, \
-         0, 0, 7, 0, \
-         0, 0, 7, 0),
-        (0, 0, 0, 0, \
-         0, 0, 0, 0, \
-         7, 7, 7, 7, \
-         0, 0, 0, 0)
-    )
-)
+import pygame
+from pygame.locals import QUIT, KEYDOWN, K_LEFT, K_RIGHT, K_DOWN, K_SPACE, K_ESCAPE
+
+BLOCKS = {'J': [(0, 0, 1,
+                 1, 1, 1,
+                 0, 0, 0),
+                (0, 1, 0,
+                 0, 1, 0,
+                 0, 1, 1),
+                (0, 0, 0,
+                 1, 1, 1,
+                 1, 0, 0),
+                (1, 1, 0,
+                 0, 1, 0,
+                 0, 1, 0)],
+          'L': [(2, 0, 0,
+                 2, 2, 2,
+                 0, 0, 0),
+                (0, 2, 2,
+                 0, 2, 0,
+                 0, 2, 0),
+                (0, 0, 0,
+                 2, 2, 2,
+                 0, 0, 2),
+                (0, 2, 0,
+                 0, 2, 0,
+                 2, 2, 0)],
+          'T': [(0, 3, 0,
+                 3, 3, 3,
+                 0, 0, 0),
+                (0, 3, 0,
+                 0, 3, 3,
+                 0, 3, 0),
+                (0, 0, 0,
+                 3, 3, 3,
+                 0, 3, 0),
+                (0, 3, 0,
+                 3, 3, 0,
+                 0, 3, 0)],
+          'Z': [(4, 4, 0,
+                 0, 4, 4,
+                 0, 0, 0),
+                (0, 0, 4,
+                 0, 4, 4,
+                 0, 4, 0),
+                (0, 0, 0,
+                 4, 4, 0,
+                 0, 4, 4),
+                (0, 4, 0,
+                 4, 4, 0,
+                 4, 0, 0)],
+          'S': [(0, 5, 5,
+                 5, 5, 0,
+                 0, 0, 0),
+                (0, 5, 0,
+                 0, 5, 5,
+                 0, 0, 5),
+                (0, 0, 0,
+                 0, 5, 5,
+                 5, 5, 0),
+                (5, 0, 0,
+                 5, 5, 0,
+                 0, 5, 0)],
+          'O': [(6, 6, 
+                 6, 6),
+                (6, 6, 
+                 6, 6),
+                (6, 6, 
+                 6, 6),
+                (6, 6, 
+                 6, 6)],
+          'I': [(0, 7, 0, 0,
+                 0, 7, 0, 0,
+                 0, 7, 0, 0,
+                 0, 7, 0, 0),
+                (0, 0, 0, 0,
+                 7, 7, 7, 7,
+                 0, 0, 0, 0,
+                 0, 0, 0, 0),
+                (0, 0, 7, 0,
+                 0, 0, 7, 0,
+                 0, 0, 7, 0,
+                 0, 0, 7, 0),
+                (0, 0, 0, 0,
+                 0, 0, 0, 0,
+                 7, 7, 7, 7,
+                 0, 0, 0, 0)]
+         }
+
+COLORS = {'J': (0, 0, 255), 
+          'L': (0, 255, 255),
+          'T': (0, 255, 0), 
+          'Z': (255, 0, 255), 
+          'S': (255, 255, 0), 
+          'O': (255, 0, 0), 
+          'I': (128, 128, 128)}
+
 
 class Block:
     """ 블록 객체 """
-    def __init__(self, count):
-        self.turn = randint(0, 3)
-        self.type = BLOCK_DATA[randint(0, 6)]
+    def __init__(self, name):
+        self.turn = 0
+        self.type = BLOCKS[name]
         self.data = self.type[self.turn]
         self.size = int(sqrt(len(self.data)))
-        self.xpos = randint(2, 8 - self.size)
+        self.xpos = 4
         self.ypos = 1 - self.size
-        self.fire = count + INTERVAL
+        self.hang = 0
+#        self.fire = count + INTERVAL
 
     def update(self, count):
         """ 블록 상태 갱신 (소거한 단의 수를 반환한다) """
@@ -125,10 +129,11 @@ class Block:
 
             erased = erase_line()
             go_next_block(count)
-
-        if self.fire < count:
-            self.fire = count + INTERVAL
-            self.ypos += 1
+        
+        self.hang = self.hang + 1
+        if self.hang > BLOCK_SPEED:
+            self.hang = 0
+            self.ypos = self.ypos + 1
         return erased
 
     def draw(self):
@@ -167,9 +172,16 @@ def is_game_over():
 
 def go_next_block(count):
     """ 다음 블록으로 전환한다 """
-    global BLOCK, NEXT_BLOCK
-    BLOCK = NEXT_BLOCK if NEXT_BLOCK != None else Block(count)
-    NEXT_BLOCK = Block(count)
+    global BLOCK, NEXT_BLOCK, BLOCK_QUEUE
+    if len(BLOCK_QUEUE) == 0:
+        for name in BLOCKS.keys():
+            BLOCK_QUEUE.append(Block(name))
+        random.shuffle(BLOCK_QUEUE)
+    if NEXT_BLOCK is None:
+        NEXT_BLOCK = BLOCK_QUEUE.pop(0)
+    BLOCK = NEXT_BLOCK
+    NEXT_BLOCK = BLOCK_QUEUE.pop(0)
+
 
 def is_overlapped(xpos, ypos, turn):
     """ 블록이 벽이나 땅의 블록과 충돌하는지 아닌지 """
@@ -188,14 +200,17 @@ pygame.init()
 pygame.key.set_repeat(30, 30)
 SURFACE = pygame.display.set_mode([600, 600])
 FPSCLOCK = pygame.time.Clock()
-WIDTH = 12
-HEIGHT = 22
+WIDTH = 10 + 2
+HEIGHT = 20 + 1
 INTERVAL = 40
 FIELD = [[0 for _ in range(WIDTH)] for _ in range(HEIGHT)]
 COLORS = ((0, 0, 0), (255, 165, 0), (0, 0, 255), (0, 255, 255), \
           (0, 255, 0), (255, 0, 255), (255, 255, 0), (255, 0, 0), (128, 128, 128))
 BLOCK = None
 NEXT_BLOCK = None
+BLOCK_QUEUE = list()
+FPS = 15
+
 
 def main():
     """ 메인 루틴 """
@@ -222,11 +237,14 @@ def main():
     while True:
         key = None
         for event in pygame.event.get():
-            if event.type == QUIT:
+            if event.type == QUIT: # 종료 이벤트
                 pygame.quit()
                 sys.exit()
             elif event.type == KEYDOWN:
                 key = event.key
+                if key == K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
 
         game_over = is_game_over()
         if not game_over:
@@ -282,7 +300,9 @@ def main():
             SURFACE.blit(message_over, message_rect)
 
         pygame.display.update()
-        FPSCLOCK.tick(15)
+        FPSCLOCK.tick(FPS)
+
 
 if __name__ == '__main__':
     main()
+
