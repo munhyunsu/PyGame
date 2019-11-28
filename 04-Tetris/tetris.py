@@ -100,7 +100,7 @@ COLORS = {'J': (0, 0, 255),
           'I': (128, 128, 128)}
 
 
-class Block:
+class Block: # 객체 갱신 필요
     """ 블록 객체 """
     def __init__(self, name):
         self.turn = 0
