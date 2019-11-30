@@ -97,7 +97,9 @@ COLORS = {'J': (0, 0, 255),
           'Z': (255, 0, 255), 
           'S': (255, 255, 0), 
           'O': (255, 0, 0), 
-          'I': (128, 128, 128)}
+          'I': (128, 128, 128),
+          'B': (255, 255, 255),
+          'W': (0, 0, 0)}
 
 
 class Block: # 객체 갱신 필요
@@ -215,8 +217,8 @@ WIDTH = 10 + 2
 HEIGHT = 20 + 1
 INTERVAL = 40
 FIELD = [[0 for _ in range(WIDTH)] for _ in range(HEIGHT)]
-COLORS = ((0, 0, 0), (255, 165, 0), (0, 0, 255), (0, 255, 255), \
-          (0, 255, 0), (255, 0, 255), (255, 255, 0), (255, 0, 0), (128, 128, 128))
+#COLORS = ((0, 0, 0), (255, 165, 0), (0, 0, 255), (0, 255, 255), \
+#          (0, 255, 0), (255, 0, 255), (255, 255, 0), (255, 0, 0), (128, 128, 128))
 BLOCK = None
 NEXT_BLOCK = None
 BLOCK_QUEUE = list()
@@ -241,10 +243,10 @@ def main():
     # 필드를 숫자로 나타낼 것인데, 8은 벽을 의미합니다.
     for ypos in range(HEIGHT):
         for xpos in range(WIDTH):
-            FIELD[ypos][xpos] = 8 if xpos == 0 or \
-                xpos == WIDTH - 1 else 0
+            FIELD[ypos][xpos] = 'W' if xpos == 0 or \
+                xpos == WIDTH - 1 else 'B'
     for index in range(WIDTH):
-        FIELD[HEIGHT-1][index] = 8
+        FIELD[HEIGHT-1][index] = 'W'
 
     # 게임 무한 루프를 수행
     while True:
@@ -266,7 +268,7 @@ def main():
             BLOCK = get_block()
 
         # 게임 오버 확인
-        if is_game_over():
+        if is_game_over(): # BUG! Infinity loop
             SURFACE.blit(message_over, message_rect)
             continue
         ## 여기부터는 게임 오버가 아님
@@ -281,6 +283,7 @@ def main():
         elif key == K_DOWN:
             BLOCK.down()
 
+        print(FIELD)
         # Draw FIELD
         SURFACE.fill((0, 0, 0))
         for ypos in range(HEIGHT):
