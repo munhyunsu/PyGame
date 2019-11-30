@@ -5,101 +5,7 @@ import random
 import pygame
 from pygame.locals import QUIT, KEYDOWN, K_UP, K_LEFT, K_RIGHT, K_DOWN, K_SPACE, K_ESCAPE
 
-BLOCKS = {'J': [(0, 0, 1,
-                 1, 1, 1,
-                 0, 0, 0),
-                (0, 1, 0,
-                 0, 1, 0,
-                 0, 1, 1),
-                (0, 0, 0,
-                 1, 1, 1,
-                 1, 0, 0),
-                (1, 1, 0,
-                 0, 1, 0,
-                 0, 1, 0)],
-          'L': [(2, 0, 0,
-                 2, 2, 2,
-                 0, 0, 0),
-                (0, 2, 2,
-                 0, 2, 0,
-                 0, 2, 0),
-                (0, 0, 0,
-                 2, 2, 2,
-                 0, 0, 2),
-                (0, 2, 0,
-                 0, 2, 0,
-                 2, 2, 0)],
-          'T': [(0, 3, 0,
-                 3, 3, 3,
-                 0, 0, 0),
-                (0, 3, 0,
-                 0, 3, 3,
-                 0, 3, 0),
-                (0, 0, 0,
-                 3, 3, 3,
-                 0, 3, 0),
-                (0, 3, 0,
-                 3, 3, 0,
-                 0, 3, 0)],
-          'Z': [(4, 4, 0,
-                 0, 4, 4,
-                 0, 0, 0),
-                (0, 0, 4,
-                 0, 4, 4,
-                 0, 4, 0),
-                (0, 0, 0,
-                 4, 4, 0,
-                 0, 4, 4),
-                (0, 4, 0,
-                 4, 4, 0,
-                 4, 0, 0)],
-          'S': [(0, 5, 5,
-                 5, 5, 0,
-                 0, 0, 0),
-                (0, 5, 0,
-                 0, 5, 5,
-                 0, 0, 5),
-                (0, 0, 0,
-                 0, 5, 5,
-                 5, 5, 0),
-                (5, 0, 0,
-                 5, 5, 0,
-                 0, 5, 0)],
-          'O': [(6, 6, 
-                 6, 6),
-                (6, 6, 
-                 6, 6),
-                (6, 6, 
-                 6, 6),
-                (6, 6, 
-                 6, 6)],
-          'I': [(0, 7, 0, 0,
-                 0, 7, 0, 0,
-                 0, 7, 0, 0,
-                 0, 7, 0, 0),
-                (0, 0, 0, 0,
-                 7, 7, 7, 7,
-                 0, 0, 0, 0,
-                 0, 0, 0, 0),
-                (0, 0, 7, 0,
-                 0, 0, 7, 0,
-                 0, 0, 7, 0,
-                 0, 0, 7, 0),
-                (0, 0, 0, 0,
-                 0, 0, 0, 0,
-                 7, 7, 7, 7,
-                 0, 0, 0, 0)]
-         }
-
-COLORS = {'J': (0, 0, 255), 
-          'L': (0, 255, 255),
-          'T': (0, 255, 0), 
-          'Z': (255, 0, 255), 
-          'S': (255, 255, 0), 
-          'O': (255, 0, 0), 
-          'I': (128, 128, 128),
-          'B': (255, 255, 255),
-          'W': (0, 0, 0)}
+from material import *
 
 
 class Block: # 객체 갱신 필요
@@ -108,22 +14,21 @@ class Block: # 객체 갱신 필요
         self.turn = 0
         self.type = BLOCKS[name]
         self.data = self.type[self.turn]
-        self.size = int(sqrt(len(self.data)))
+        self.size = int(sqrt(len(self.data))) 
         self.xpos = 4
         self.ypos = 1 - self.size
         self.hang = 0
-#        self.fire = count + INTERVAL
 
     def update(self):
         """ 블록 상태 갱신 (소거한 단의 수를 반환한다) """
         # 아래로 총돌?
         erased = 0
         if is_overlapped(self.xpos, self.ypos + 1, self.turn):
-            for y_offset in range(BLOCK.size):
-                for x_offset in range(BLOCK.size):
+            for y_offset in range(self.size):
+                for x_offset in range(self.size):
                     if 0 <= self.xpos+x_offset < WIDTH and \
                         0 <= self.ypos+y_offset < HEIGHT:
-                        val = BLOCK.data[y_offset*BLOCK.size \
+                        val = self.data[y_offset*self.size \
                                             + x_offset]
                         if val != 0:
                             FIELD[self.ypos+y_offset]\
@@ -168,7 +73,7 @@ def is_game_over():
     """ 게임 오버인지 아닌지 """
     filled = 0
     for cell in FIELD[0]:
-        if cell != 0:
+        if cell != 'B':
             filled += 1
     return filled > 2   # 2 = 좌우의 벽
 
@@ -217,8 +122,6 @@ WIDTH = 10 + 2
 HEIGHT = 20 + 1
 INTERVAL = 40
 FIELD = [[0 for _ in range(WIDTH)] for _ in range(HEIGHT)]
-#COLORS = ((0, 0, 0), (255, 165, 0), (0, 0, 255), (0, 255, 255), \
-#          (0, 255, 0), (255, 0, 255), (255, 255, 0), (255, 0, 0), (128, 128, 128))
 BLOCK = None
 NEXT_BLOCK = None
 BLOCK_QUEUE = list()
@@ -250,6 +153,7 @@ def main():
 
     # 게임 무한 루프를 수행
     while True:
+        FPSCLOCK.tick(FPS)
         # 이벤트 루프를 확인
         ## 게임오버가 되면 게임내 이벤트 처리를 막아야하기 때문에
         ## 이벤트 루프 확인 구간에서는 '종료' 처리 및 '입력 키' 저장 수행
@@ -268,7 +172,7 @@ def main():
             BLOCK = get_block()
 
         # 게임 오버 확인
-        if is_game_over(): # BUG! Infinity loop
+        if is_game_over():
             SURFACE.blit(message_over, message_rect)
             continue
         ## 여기부터는 게임 오버가 아님
@@ -283,7 +187,6 @@ def main():
         elif key == K_DOWN:
             BLOCK.down()
 
-        print(FIELD)
         # Draw FIELD
         SURFACE.fill((0, 0, 0))
         for ypos in range(HEIGHT):
@@ -320,7 +223,6 @@ def main():
 
         # 언제나 그렇듯 화면을 업데이트하고, 쉽니다.
         pygame.display.update()
-        FPSCLOCK.tick(FPS)
 
 
 if __name__ == '__main__':
