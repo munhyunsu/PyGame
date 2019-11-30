@@ -17,31 +17,33 @@ class Block: # 객체 갱신 필요
         self.size = int(sqrt(len(self.data))) 
         self.xpos = 4
         self.ypos = 1 - self.size
-        self.hang = 0
+        self.stop = 0
 
     def update(self):
+        global BLOCK
         """ 블록 상태 갱신 (소거한 단의 수를 반환한다) """
         # 아래로 총돌?
         erased = 0
-        if is_overlapped(self.xpos, self.ypos + 1, self.turn):
+        if is_overlapped(self.xpos, self.ypos+1, self.turn):
             for y_offset in range(self.size):
                 for x_offset in range(self.size):
                     if 0 <= self.xpos+x_offset < WIDTH and \
                         0 <= self.ypos+y_offset < HEIGHT:
                         val = self.data[y_offset*self.size \
                                             + x_offset]
-                        if val != 0:
+                        if val != 'B':
                             FIELD[self.ypos+y_offset]\
                                  [self.xpos+x_offset] = val
 
-            erased = erase_line()
             BLOCK = get_block()
+#            erased = erase_line()
         
-        self.hang = self.hang + 1
-        if self.hang > FPS/DIFFICULT:
-            self.hang = 0
-            self.ypos = self.ypos + 1
-        return erased
+        else:
+            self.stop = self.stop + 1
+            if self.stop > FPS/DIFFICULT:
+                self.stop = 0
+                self.ypos = self.ypos + 1
+#        return erased
 
     def draw(self):
         """ 블록을 그린다 """
@@ -50,11 +52,29 @@ class Block: # 객체 갱신 필요
             ypos = index // self.size
             val = self.data[index]
             if 0 <= ypos + self.ypos < HEIGHT and \
-               0 <= xpos + self.xpos < WIDTH and val != 0:
+               0 <= xpos + self.xpos < WIDTH and val != 'B':
                 x_pos = 25 + (xpos + self.xpos) * 25
                 y_pos = 25 + (ypos + self.ypos) * 25
                 pygame.draw.rect(SURFACE, COLORS[val],
                                  (x_pos, y_pos, 24, 24))
+
+    def left(self):
+        if not is_overlapped(self.xpos-1, self.ypos, self.turn):
+            self.xpos = self.xpos-1
+
+    def right(self):
+        if not is_overlapped(self.xpos+1, self.ypos, self.turn):
+            self.xpos = self.xpos+1
+
+    def down(self):
+        if not is_overlapped(self.xpos, self.ypos+1, self.turn):
+            self.ypos = self.ypos+1
+
+    def up(self):
+        if not is_overlapped(self.xpos, self.ypos, (self.turn+1)%4):
+            self.turn = (self.turn+1)%4
+            self.data = self.type[self.turn]
+
 
 def erase_line():
     """ 행이 모두 찬 단을 지운다 """
@@ -89,6 +109,7 @@ def go_next_block(count):
     NEXT_BLOCK = BLOCK_QUEUE.pop(0)
 
 
+
 def get_block():
     global BLOCK_QUEUE
     # 현대 테스리스는 모든 블록이 1번씩 무작위로 순회합니다.
@@ -108,8 +129,8 @@ def is_overlapped(xpos, ypos, turn):
         for x_offset in range(BLOCK.size):
             if 0 <= xpos+x_offset < WIDTH and \
                 0 <= ypos+y_offset < HEIGHT:
-                if data[y_offset*BLOCK.size + x_offset] != 0 and \
-                    FIELD[ypos+y_offset][xpos+x_offset] != 0:
+                if data[y_offset*BLOCK.size + x_offset] != 'B' and \
+                    FIELD[ypos+y_offset][xpos+x_offset] != 'B':
                     return True
     return False
 
@@ -126,7 +147,7 @@ BLOCK = None
 NEXT_BLOCK = None
 BLOCK_QUEUE = list()
 FPS = 15
-DIFFICULT = 1
+DIFFICULT = 3
 
 
 def main():
@@ -151,9 +172,12 @@ def main():
     for index in range(WIDTH):
         FIELD[HEIGHT-1][index] = 'W'
 
+    # 초기화
+    if BLOCK is None:
+        BLOCK = get_block()
+
     # 게임 무한 루프를 수행
     while True:
-        FPSCLOCK.tick(FPS)
         # 이벤트 루프를 확인
         ## 게임오버가 되면 게임내 이벤트 처리를 막아야하기 때문에
         ## 이벤트 루프 확인 구간에서는 '종료' 처리 및 '입력 키' 저장 수행
@@ -167,62 +191,57 @@ def main():
                 if key == K_ESCAPE:
                     pygame.quit()
                     sys.exit()
- 
-        if BLOCK is None:
-            BLOCK = get_block()
 
         # 게임 오버 확인
         if is_game_over():
             SURFACE.blit(message_over, message_rect)
-            continue
-        ## 여기부터는 게임 오버가 아님
-        
+        else: ## 게임 오버가 아님
         # 움직임 처리
-        if key == K_UP:
-            BLOCK.turn()
-        elif key == K_RIGHT:
-            BLOCK.right()
-        elif key == K_LEFT:
-            BLOCK.left()
-        elif key == K_DOWN:
-            BLOCK.down()
+            if key == K_UP:
+                BLOCK.up()
+            elif key == K_RIGHT:
+                BLOCK.right()
+            elif key == K_LEFT:
+                BLOCK.left()
+            elif key == K_DOWN:
+                BLOCK.down()
 
-        # Draw FIELD
-        SURFACE.fill((0, 0, 0))
-        for ypos in range(HEIGHT):
-            for xpos in range(WIDTH):
-                value = FIELD[ypos][xpos]
-                pygame.draw.rect(SURFACE, COLORS[value],
-                                 (xpos*25 + 25, ypos*25 + 25, 24, 24))
-        BLOCK.draw()
-
-        # Draw Next BLOCKS
-        ymargin = 0
-        for next_block in BLOCK_QUEUE[0:7]:
-            ymargin = ymargin + 1
-            for ypos in range(next_block.size):
-                for xpos in range(next_block.size):
-                    value = next_block.data[xpos+ypos*next_block.size]
+            # Draw FIELD
+            SURFACE.fill((0, 0, 0))
+            for ypos in range(HEIGHT):
+                for xpos in range(WIDTH):
+                    value = FIELD[ypos][xpos]
                     pygame.draw.rect(SURFACE, COLORS[value],
-                                     (xpos*25 + 460, ypos*25 + 100*ymargin, 
-                                      24, 24))
+                                     (xpos*25 + 25, ypos*25 + 25, 24, 24))
+
+            BLOCK.update()
+            BLOCK.draw()
+
+            # Draw Next BLOCKS
+            ymargin = 0
+            for next_block in BLOCK_QUEUE[0:7]:
+                ymargin = ymargin + 1
+                for ypos in range(next_block.size):
+                    for xpos in range(next_block.size):
+                        value = next_block.data[xpos+ypos*next_block.size]
+                        pygame.draw.rect(SURFACE, COLORS[value],
+                                         (xpos*15+460, ypos*15+75*ymargin, 
+                                          15, 15))
 
         # Erase lines
-        erased = BLOCK.update()
-        if erased > 0 :
-            score = score + 2**erased
+#        erased = BLOCK.update()
+#        if erased > 0 :
+#            score = score + 2**erased
 
-        # 점수 나타내기
-        score_str = str(score).zfill(6)
-        score_image = smallfont.render(score_str,
-                                       True, (0, 255, 0))
-        SURFACE.blit(score_image, (500, 30))
+            # 점수 나타내기
+            score_str = str(score).zfill(6)
+            score_image = smallfont.render(score_str,
+                                           True, (180, 180, 180))
+            SURFACE.blit(score_image, (500, 30))
 
-        if game_over:
-            SURFACE.blit(message_over, message_rect)
-
-        # 언제나 그렇듯 화면을 업데이트하고, 쉽니다.
+        # 언제나 그렇듯 화면을 업데이트
         pygame.display.update()
+        FPSCLOCK.tick(FPS)
 
 
 if __name__ == '__main__':
