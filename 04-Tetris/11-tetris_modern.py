@@ -1,5 +1,5 @@
 ﻿import sys
-from math import sqrt, ceil
+from math import sqrt
 import random
 
 import pygame
@@ -33,10 +33,9 @@ class Block:
                                  [self.xpos+x_offset] = val
             BLOCK = get_block()
             erased = erase_line()
-            sound_fall.play()
         else:
             self.stop = self.stop + 1
-            if self.stop > FPS/DIFFICULT:
+            if self.stop > FPS*1:
                 self.stop = 0
                 self.ypos = self.ypos + 1
         return erased
@@ -89,7 +88,6 @@ def erase_line():
             new_line.insert(0, 'W')
             new_line.append('W')
             FIELD.insert(0, new_line)
-            sound_line.play()
         else:
             ypos = ypos - 1
     return erased
@@ -129,12 +127,6 @@ def is_overlapped(xpos, ypos, turn):
 # 전역 변수
 pygame.init()
 pygame.key.set_repeat(30, 30)
-pygame.mixer.init()
-pygame.mixer.music.load('sound/Tetris_theme.ogg')
-pygame.mixer.music.play(-1, 0)
-sound_line = pygame.mixer.Sound('sound/line.wav')
-sound_fall = pygame.mixer.Sound('sound/fall.wav')
-image_bg = pygame.image.load('image/space.jpg')
 SURFACE = pygame.display.set_mode([600, 600])
 FPSCLOCK = pygame.time.Clock()
 WIDTH = 10 + 2
@@ -143,12 +135,10 @@ FIELD = [[0 for _ in range(WIDTH)] for _ in range(HEIGHT)]
 BLOCK = None
 BLOCK_QUEUE = list()
 FPS = 15
-DIFFICULT = 1
 
 
 def main():
     global BLOCK
-    global DIFFICULT
     score = 0
     # 초기화
     if BLOCK is None:
@@ -185,7 +175,6 @@ def main():
         # 게임 오버 확인
         if is_game_over():
             SURFACE.blit(message_over, message_rect)
-            pygame.mixer.music.stop()
         else: ## 게임 오버가 아님
             # 움직임 처리
             if key == K_UP:
@@ -201,7 +190,6 @@ def main():
 
             # Draw FIELD
             SURFACE.fill((0, 0, 0))
-            SURFACE.blit(image_bg, (0, 0))
             for ypos in range(HEIGHT):
                 for xpos in range(WIDTH):
                     value = FIELD[ypos][xpos]
@@ -212,7 +200,6 @@ def main():
             erased = BLOCK.update()
             if erased > 0:
                 score = score + 2**erased
-                DIFFICULT = min(ceil(score/10), 15)
             BLOCK.draw()
 
             # Draw Next BLOCKS
