@@ -15,8 +15,8 @@ class Block: # 객체 갱신 필요
         self.type = BLOCKS[name]
         self.data = self.type[self.turn]
         self.size = int(sqrt(len(self.data))) 
-        self.xpos = 4
-        self.ypos = 1 - self.size
+        self.xpos = (WIDTH - self.size)//2
+        self.ypos = 0
         self.stop = 0
 
     def update(self):
@@ -34,16 +34,15 @@ class Block: # 객체 갱신 필요
                         if val != 'B':
                             FIELD[self.ypos+y_offset]\
                                  [self.xpos+x_offset] = val
-
             BLOCK = get_block()
-#            erased = erase_line()
-        
+            erased = erase_line()
+            sound_fall.play()
         else:
             self.stop = self.stop + 1
             if self.stop > FPS/DIFFICULT:
                 self.stop = 0
                 self.ypos = self.ypos + 1
-#        return erased
+        return erased
 
     def draw(self):
         """ 블록을 그린다 """
@@ -75,18 +74,28 @@ class Block: # 객체 갱신 필요
             self.turn = (self.turn+1)%4
             self.data = self.type[self.turn]
 
+    def hard_drop(self):
+        ypos = self.ypos
+        while not is_overlapped(self.xpos, ypos+1, self.turn):
+            ypos = ypos + 1
+        self.ypos = ypos
+
 
 def erase_line():
     """ 행이 모두 찬 단을 지운다 """
     erased = 0
-    ypos = 20
+    ypos = HEIGHT-1
     while ypos >= 0:
-        if all(FIELD[ypos]):
-            erased += 1
+        if FIELD[ypos].count('B') == 0 and FIELD[ypos].count('W') == 2:
+            erased = erased + 1
             del FIELD[ypos]
-            FIELD.insert(0, [8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8])
+            new_line = ['B']*(WIDTH-2)
+            new_line.insert(0, 'W')
+            new_line.append('W')
+            FIELD.insert(0, new_line)
+            sound_line.play()
         else:
-            ypos -= 1
+            ypos = ypos - 1
     return erased
 
 def is_game_over():
@@ -96,19 +105,6 @@ def is_game_over():
         if cell != 'B':
             filled += 1
     return filled > 2   # 2 = 좌우의 벽
-
-def go_next_block(count):
-    global BLOCK, NEXT_BLOCK, BLOCK_QUEUE
-    if len(BLOCK_QUEUE) == 0:
-        for name in BLOCKS.keys():
-            BLOCK_QUEUE.append(Block(name))
-        random.shuffle(BLOCK_QUEUE)
-    if NEXT_BLOCK is None:
-        NEXT_BLOCK = BLOCK_QUEUE.pop(0)
-    BLOCK = NEXT_BLOCK
-    NEXT_BLOCK = BLOCK_QUEUE.pop(0)
-
-
 
 def get_block():
     global BLOCK_QUEUE
@@ -120,7 +116,6 @@ def get_block():
         random.shuffle(new_blocks)
         BLOCK_QUEUE.extend(new_blocks)
     return BLOCK_QUEUE.pop(0)
-
 
 def is_overlapped(xpos, ypos, turn):
     """ 블록이 벽이나 땅의 블록과 충돌하는지 아닌지 """
@@ -137,6 +132,11 @@ def is_overlapped(xpos, ypos, turn):
 # 전역 변수
 pygame.init()
 pygame.key.set_repeat(30, 30)
+pygame.mixer.init()
+pygame.mixer.music.load('sound/Tetris_theme.ogg')
+pygame.mixer.music.play(-1, 0)
+sound_line = pygame.mixer.Sound('sound/line.wav')
+sound_fall = pygame.mixer.Sound('sound/fall.wav')
 SURFACE = pygame.display.set_mode([600, 600])
 FPSCLOCK = pygame.time.Clock()
 WIDTH = 10 + 2
@@ -205,6 +205,8 @@ def main():
                 BLOCK.left()
             elif key == K_DOWN:
                 BLOCK.down()
+            elif key == K_SPACE:
+                BLOCK.hard_drop()
 
             # Draw FIELD
             SURFACE.fill((0, 0, 0))
@@ -214,7 +216,10 @@ def main():
                     pygame.draw.rect(SURFACE, COLORS[value],
                                      (xpos*25 + 25, ypos*25 + 25, 24, 24))
 
-            BLOCK.update()
+            # Landing and erase line
+            erased = BLOCK.update()
+            if erased > 0:
+                score = score + 2**erased
             BLOCK.draw()
 
             # Draw Next BLOCKS
@@ -227,11 +232,6 @@ def main():
                         pygame.draw.rect(SURFACE, COLORS[value],
                                          (xpos*15+460, ypos*15+75*ymargin, 
                                           15, 15))
-
-        # Erase lines
-#        erased = BLOCK.update()
-#        if erased > 0 :
-#            score = score + 2**erased
 
             # 점수 나타내기
             score_str = str(score).zfill(6)
