@@ -137,6 +137,7 @@ pygame.mixer.music.load('sound/Tetris_theme.ogg')
 pygame.mixer.music.play(-1, 0)
 sound_line = pygame.mixer.Sound('sound/line.wav')
 sound_fall = pygame.mixer.Sound('sound/fall.wav')
+image_bg = pygame.image.load('image/space.jpg')
 SURFACE = pygame.display.set_mode([600, 600])
 FPSCLOCK = pygame.time.Clock()
 WIDTH = 10 + 2
@@ -210,6 +211,7 @@ def main():
 
             # Draw FIELD
             SURFACE.fill((0, 0, 0))
+            SURFACE.blit(image_bg, (0, 0))
             for ypos in range(HEIGHT):
                 for xpos in range(WIDTH):
                     value = FIELD[ypos][xpos]
