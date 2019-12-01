@@ -8,8 +8,7 @@ from pygame.locals import QUIT, KEYDOWN, K_UP, K_LEFT, K_RIGHT, K_DOWN, K_SPACE,
 from material import *
 
 
-class Block: # 객체 갱신 필요
-    """ 블록 객체 """
+class Block:
     def __init__(self, name):
         self.turn = 0
         self.type = BLOCKS[name]
@@ -21,14 +20,12 @@ class Block: # 객체 갱신 필요
 
     def update(self):
         global BLOCK
-        """ 블록 상태 갱신 (소거한 단의 수를 반환한다) """
-        # 아래로 총돌?
         erased = 0
         if is_overlapped(self.xpos, self.ypos+1, self.turn):
             for y_offset in range(self.size):
                 for x_offset in range(self.size):
-                    if 0 <= self.xpos+x_offset < WIDTH and \
-                        0 <= self.ypos+y_offset < HEIGHT:
+                    if ((0 <= self.xpos+x_offset < WIDTH) and
+                        (0 <= self.ypos+y_offset < HEIGHT)):
                         val = self.data[y_offset*self.size \
                                             + x_offset]
                         if val != 'B':
@@ -45,13 +42,13 @@ class Block: # 객체 갱신 필요
         return erased
 
     def draw(self):
-        """ 블록을 그린다 """
         for index in range(len(self.data)):
             xpos = index % self.size
             ypos = index // self.size
             val = self.data[index]
-            if 0 <= ypos + self.ypos < HEIGHT and \
-               0 <= xpos + self.xpos < WIDTH and val != 'B':
+            if ((0 <= ypos + self.ypos < HEIGHT) and
+                (0 <= xpos + self.xpos < WIDTH) and 
+                (val != 'B')):
                 x_pos = 25 + (xpos + self.xpos) * 25
                 y_pos = 25 + (ypos + self.ypos) * 25
                 pygame.draw.rect(SURFACE, COLORS[val],
@@ -82,7 +79,6 @@ class Block: # 객체 갱신 필요
 
 
 def erase_line():
-    """ 행이 모두 찬 단을 지운다 """
     erased = 0
     ypos = HEIGHT-1
     while ypos >= 0:
@@ -98,17 +94,18 @@ def erase_line():
             ypos = ypos - 1
     return erased
 
+
 def is_game_over():
-    """ 게임 오버인지 아닌지 """
     filled = 0
     for cell in FIELD[0]:
         if cell != 'B':
             filled += 1
-    return filled > 2   # 2 = 좌우의 벽
+    return filled > 2
+
 
 def get_block():
     global BLOCK_QUEUE
-    # 현대 테스리스는 모든 블록이 1번씩 무작위로 순회합니다.
+    # 현대 테스리스는 모든 블록이 1번씩 무작위로 순회
     while len(BLOCK_QUEUE) < len(BLOCKS.keys())+1:
         new_blocks = list()
         for name in BLOCKS.keys():
@@ -117,15 +114,15 @@ def get_block():
         BLOCK_QUEUE.extend(new_blocks)
     return BLOCK_QUEUE.pop(0)
 
+
 def is_overlapped(xpos, ypos, turn):
-    """ 블록이 벽이나 땅의 블록과 충돌하는지 아닌지 """
     data = BLOCK.type[turn]
     for y_offset in range(BLOCK.size):
         for x_offset in range(BLOCK.size):
-            if 0 <= xpos+x_offset < WIDTH and \
-                0 <= ypos+y_offset < HEIGHT:
-                if data[y_offset*BLOCK.size + x_offset] != 'B' and \
-                    FIELD[ypos+y_offset][xpos+x_offset] != 'B':
+            if ((0 <= xpos+x_offset < WIDTH) and
+                (0 <= ypos+y_offset < HEIGHT)):
+                if ((data[y_offset*BLOCK.size + x_offset] != 'B') and
+                    (FIELD[ypos+y_offset][xpos+x_offset] != 'B')):
                     return True
     return False
 
@@ -142,40 +139,37 @@ SURFACE = pygame.display.set_mode([600, 600])
 FPSCLOCK = pygame.time.Clock()
 WIDTH = 10 + 2
 HEIGHT = 20 + 1
-INTERVAL = 40
 FIELD = [[0 for _ in range(WIDTH)] for _ in range(HEIGHT)]
 BLOCK = None
 NEXT_BLOCK = None
 BLOCK_QUEUE = list()
 FPS = 15
-DIFFICULT = 3
+DIFFICULT = 1
 
 
 def main():
     """ 메인 루틴 """
-    global INTERVAL
     global BLOCK
-    count = 0
     score = 0
     game_over = False
+    # 초기화
+    if BLOCK is None:
+        BLOCK = get_block()
+
+    # 메시지
     smallfont = pygame.font.SysFont(None, 36)
     largefont = pygame.font.SysFont(None, 72)
     message_over = largefont.render("GAME OVER!!",
-                                    True, (0, 255, 225))
+                                    True, (255, 255, 255))
     message_rect = message_over.get_rect()
     message_rect.center = (300, 300)
 
     # 필드를 숫자로 나타낼 것인데, 8은 벽을 의미합니다.
     for ypos in range(HEIGHT):
         for xpos in range(WIDTH):
-            FIELD[ypos][xpos] = 'W' if xpos == 0 or \
-                xpos == WIDTH - 1 else 'B'
+            FIELD[ypos][xpos] = 'W' if xpos == 0 or xpos == WIDTH - 1 else 'B'
     for index in range(WIDTH):
         FIELD[HEIGHT-1][index] = 'W'
-
-    # 초기화
-    if BLOCK is None:
-        BLOCK = get_block()
 
     # 게임 무한 루프를 수행
     while True:
@@ -196,6 +190,7 @@ def main():
         # 게임 오버 확인
         if is_game_over():
             SURFACE.blit(message_over, message_rect)
+            pygame.mixer.music.stop()
         else: ## 게임 오버가 아님
         # 움직임 처리
             if key == K_UP:
