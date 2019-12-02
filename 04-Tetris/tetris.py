@@ -212,7 +212,7 @@ def main():
             erased = BLOCK.update()
             if erased > 0:
                 score = score + 2**erased
-                DIFFICULT = min(ceil(score/10), 15)
+                DIFFICULT = min(ceil(score/10), FPS)
             BLOCK.draw()
 
             # Draw Next BLOCKS
