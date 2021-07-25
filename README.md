@@ -1,6 +1,11 @@
 # PyGame
 PyGame Repository
 
+## Games
+
+1. Tetris
+2. Bullet Dodge
+
 ## Lectures
   1. Install PyGame
   2. Create PyGame Window
