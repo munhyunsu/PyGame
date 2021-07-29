@@ -34,10 +34,11 @@ screen = None
 font_title = pygame.font.Font(None, 65)
 font_big = pygame.font.Font(None, 36)
 font_default = pygame.font.Font(None, 28)
-SPEED = 1
+SPEED = 1 # must int
+KEYINTERVAL = 5
 cscore = 0
 max_bullet = 50
-break_bullet = 3
+break_bullet = 10
 
 ## MAIN
 def main(argv):
@@ -101,7 +102,7 @@ def play_game():
     global cscore
     global max_bullet
 
-    pygame.key.set_repeat(1, 1)
+    pygame.key.set_repeat(KEYINTERVAL)
 
     airplane = AirPlane()
     airplane.set_position(WIDTH/2, HEIGHT/2)
