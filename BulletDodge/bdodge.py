@@ -224,11 +224,11 @@ class Bullet(pygame.sprite.Sprite):
 
     def update(self):
         self.xthresh = self.xthresh + self.xspeed
-        if abs(self.xthresh) > 1:
+        if abs(self.xthresh) >= 1:
             self.rect.x = self.rect.x + int(self.xthresh)
             self.xthresh = self.xthresh - int(self.xthresh)
         self.ythresh = self.ythresh + self.yspeed
-        if abs(self.ythresh) > 1:
+        if abs(self.ythresh) >= 1:
             self.rect.y = self.rect.y + int(self.ythresh)
             self.ythresh = self.ythresh - int(self.ythresh)
         if self.is_edge():
